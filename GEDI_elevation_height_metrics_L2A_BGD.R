@@ -25,8 +25,6 @@ library(httr)
 #-------------------------------------------------------------------------------
 # Assign your working directory
 #-------------------------------------------------------------------------------
-
-
 myDirectory <- "D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2A"
 
 # set your working directory
@@ -101,7 +99,6 @@ print(sprintf("%s %s Version 2 granules found.", length(granules_L2A), product))
 #-------------------------------------------------------------------------------
 # convert granules list to vector
 #-------------------------------------------------------------------------------
-
 granules_L2A_v <- unlist(granules_L2A, use.names=FALSE)
 
 #-------------------------------------------------------------------------------
@@ -129,7 +126,6 @@ gediDownload(filepath = granules_L2A_v[15], outdir = outdir)
 #-------------------------------------------------------------------------------
 # Read the h5 GEDI files (necessary at all??) - h5 file names do not match!!
 #-------------------------------------------------------------------------------
-
 gedilevel2a_0808 <- readLevel2A(level2Apath = file.path(outdir, "GEDI02_A_2019180075351_O03082_03_T00826_02_003_01_V002.h5"))
 gedilevel2a_1209 <- readLevel2A(level2Apath = file.path(outdir, "GEDI02_A_2019255220154_O04255_02_T05016_02_003_01_V002.h5"))
 gedilevel2a_0710 <- readLevel2A(level2Apath = file.path(outdir, "GEDI02_A_2019331160117_O05430_02_T02170_02_003_01_V002.h5"))
@@ -141,53 +137,35 @@ gedilevel2a_0311 <- readLevel2A(level2Apath = file.path(outdir, "GEDI02_A_201922
 # subset data based on BB
 #-------------------------------------------------------------------------------
 
+### define BB
 xmin = 12.759659
 xmax = 13.098862
 ymin = 47.458228
 ymax = 47.646021
 
-# subset gedi data  
-# attention, subset 8 doesnt work!
+### subset gedi data  
 level2a_subset_0808 <- clipLevel2A(gedilevel2a_0808, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_0808.h5")
 level2a_subset_1209 <- clipLevel2A(gedilevel2a_1209, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_1209.h5")
-level2a_subset_0710 <- clipLevel2A(gedilevel2a_0710, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_0710.h5")
-level2a_subset_0910 <- clipLevel2A(gedilevel2a_0910, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_0910.h5")
-level2a_subset_0111 <- clipLevel2A(gedilevel2a_0111, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_0111.h5")
-level2a_subset_0311 <- clipLevel2A(gedilevel2a_0311, xmin, xmax, ymin, ymax, output = "GEDI_2A_subset_0311.h5")
-
 
 
 #-------------------------------------------------------------------------------
 #read subset data
 #-------------------------------------------------------------------------------
-
-
 gedilevel2a_subset_0808 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_0808.h5"))
 
 gedilevel2a_subset_1209 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_1209.h5"))
-
-gedilevel2a_subset_0710 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_0710.h5"))
-
-gedilevel2a_subset_0910 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_0910.h5"))
-
-gedilevel2a_subset_0111 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_0111.h5"))
-
-gedilevel2a_subset_0311 <- readLevel2A(level2Apath = file.path(outdir, "L2A/GEDI_2A_subset_0311.h5"))
 
 
 #-------------------------------------------------------------------------------
 # Get GEDI Elevation and Height Metrics (GEDI Level2A)
 #-------------------------------------------------------------------------------
-
 level2AM_0808<-getLevel2AM(gedilevel2a_subset_0808)
 head(level2AM_0808[,c("beam","shot_number","elev_highestreturn","elev_lowestmode","rh100")])
 
 level2AM_1209<-getLevel2AM(gedilevel2a_subset_1209)
 head(level2AM_1209[,c("beam","shot_number","elev_highestreturn","elev_lowestmode","rh100")])
 
-
-
-# remove nodata values
+### remove nodata values
 level2AM_0808_cl <- subset(level2AM_0808, level2AM_0808$quality_flag == 1)
 level2AM_1209_cl <- subset(level2AM_1209, level2AM_1209$quality_flag == 1)
 
