@@ -2,12 +2,13 @@
 # Tasks
 #-------------------------------------------------------------------------------
 
-#1 Define function to query CMR (common data repository) based on user-provided input (date, BB)
+#1 Define function to query CMR (common metadata repository) based on user-provided input (date, BB)
 #2 Use GEDI finder to locate GEDI data of your AOI
 #3 Download and subset respective GEDI data
 #4 Compute Vegetation Biophysical Variables
 #5 Compute Plant Area Index (PAI) and Plant Area Volume Density (PAVD) Profiles
-
+#6 compute biophycial vegetation parameters
+#7 compute grids from metrics
 #-------------------------------------------------------------------------------
 
 
@@ -25,8 +26,6 @@ library(rasterVis)
 library(viridis)
 library(rgdal)
 
-install.packages("rasterVis")
-install.packages("viridis")
 
 #-------------------------------------------------------------------------------
 # Assign your working directory
@@ -170,116 +169,89 @@ level2b_subset_6 <- clipLevel2B(gedilevel2b_6, xmin, xmax, ymin, ymax, output = 
 
 gedilevel2b_subset_0808 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_0808.h5"))
 gedilevel2b_subset_1209 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_1209.h5"))
-gedilevel2b_subset_0710 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_0710.h5"))
-gedilevel2b_subset_0910 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_0910.h5"))
-gedilevel2b_subset_0111 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_0111.h5"))
-gedilevel2b_subset_0311 <- readLevel2B(level2Bpath = file.path(outdir, "L2B/GEDI_2B_subset_0311.h5"))
 
-
-#
+#-------------------------------------------------------------------------------
 # Compute biophysical vegetation variables
-#
+#-------------------------------------------------------------------------------
 level2BVPM_0808<-getLevel2BVPM(gedilevel2b_subset_0808)
 head(level2BVPM_0808[,c("beam","shot_number","pai","fhd_normal","omega","pgap_theta","cover")])
 
 level2BVPM_1209<-getLevel2BVPM(gedilevel2b_subset_1209)
 head(level2BVPM_1209[,c("beam","shot_number","pai","fhd_normal","omega","pgap_theta","cover")])
 
-
-
-# remove nodata values
+### remove nodata values
 
 level2BVPM_0808_cl <- subset(level2BVPM_0808, level2BVPM_0808$pai != -9999)
 level2BVPM_1209_cl <- subset(level2BVPM_1209, level2BVPM_1209$pai != -9999)
 
-#
-# Converting shot_number as "integer64" to "character"
-#
+
+### Converting shot_number as "integer64" to "character"
+
 level2BVPM_0808_cl$shot_number<-paste0(level2BVPM_0808_cl$shot_number)
 level2BVPM_1209_cl$shot_number<-paste0(level2BVPM_1209_cl$shot_number)
 
 
-
-# Converting GEDI Vegetation Profile Biophysical Variables as data.table to SpatialPointsDataFrame
+### Converting GEDI Vegetation Profile Biophysical Variables as data.table to 
+### SpatialPointsDataFrame
 level2BVPM_spdf_0808<-SpatialPointsDataFrame(cbind(level2BVPM_0808_cl$longitude_lastbin,level2BVPM_0808_cl$latitude_lastbin),data=level2BVPM_0808_cl)
 level2BVPM_spdf_1209<-SpatialPointsDataFrame(cbind(level2BVPM_1209_cl$longitude_lastbin,level2BVPM_1209_cl$latitude_lastbin),data=level2BVPM_1209_cl)
 
 
-# Exporting GEDI Vegetation Profile Biophysical Variables as ESRI Shapefile
-
-raster::shapefile(level2BVPM_spdf_0710,paste0(outdir,"L2B/GEDI_2B_subset_0710_VPM"))
-
-
+### Exporting GEDI Vegetation Profile Biophysical Variables as ESRI Shapefile
 raster::shapefile(level2BVPM_spdf_0808_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_0808_VPM_cl"))
 raster::shapefile(level2BVPM_spdf_1209_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_1209_VPM_cl"))
-raster::shapefile(level2BVPM_spdf_0710,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_0710_VPM"))
-raster::shapefile(level2BVPM_spdf_0910,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_0910_VPM"))
-raster::shapefile(level2BVPM_spdf_0111,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_0111_VPM"))
-raster::shapefile(level2BVPM_spdf_0311,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/GEDI_2B_subset_0311_VPM"))
 
-#
-# Get Plant Area Index (PAI) 
-#
+
+### Get Plant Area Index (PAI) sliced in different height classes
 level2BPAIProfile_0808<-getLevel2BPAIProfile(gedilevel2b_subset_0808)
 head(level2BPAIProfile_0808[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
 
 level2BPAIProfile_1209<-getLevel2BPAIProfile(gedilevel2b_subset_1209)
 head(level2BPAIProfile_1209[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
 
-level2BPAIProfile_0710<-getLevel2BPAIProfile(gedilevel2b_subset_0710)
-head(level2BPAIProfile_0710[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
 
-level2BPAIProfile_0910<-getLevel2BPAIProfile(gedilevel2b_subset_0910)
-head(level2BPAIProfile_0910[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
-
-level2BPAIProfile_0111<-getLevel2BPAIProfile(gedilevel2b_subset_0111)
-head(level2BPAIProfile_0111[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
-
-level2BPAIProfile_0311<-getLevel2BPAIProfile(gedilevel2b_subset_0311)
-head(level2BPAIProfile_0311[,c("beam","shot_number","pai_z0_5m","pai_z5_10m")])
-
-# remove nodata values
+### remove nodata values
 level2BPAIProfile_0808_cl <- subset(level2BPAIProfile_0808, level2BPAIProfile_0808$height_bin0 != -9999)
 level2BPAIProfile_1209_cl <- subset(level2BPAIProfile_1209, level2BPAIProfile_1209$height_bin0 != -9999)
 
 
-# Get Plant Area Volume Density Profiles (PAVD)
+### Get Plant Area Volume Density Profiles (PAVD)
 level2BPAVDProfile_0808<-getLevel2BPAVDProfile(gedilevel2b_subset_0808)
 head(level2BPAVDProfile_0808[,c("beam","shot_number","pavd_z0_5m","pavd_z5_10m")])
 
 level2BPAVDProfile_1209<-getLevel2BPAVDProfile(gedilevel2b_subset_1209)
 head(level2BPAVDProfile_1209[,c("beam","shot_number","pavd_z0_5m","pavd_z5_10m")])
 
-# remove nodata values
+### remove nodata values
 level2BPAVDProfile_0808_cl <- subset(level2BPAVDProfile_0808, level2BPAVDProfile_0808$height_bin0 != -9999)
 level2BPAVDProfile_1209_cl <- subset(level2BPAVDProfile_1209, level2BPAVDProfile_1209$height_bin0 != -9999)
 
 
-# Converting PAI shot_number as "integer64" to "character"
+### Converting PAI shot_number as "integer64" to "character"
 level2BPAIProfile_0808_cl$shot_number<-paste0(level2BPAIProfile_0808_cl$shot_number)
 level2BPAIProfile_1209_cl$shot_number<-paste0(level2BPAIProfile_1209_cl$shot_number)
 
 
-# Converting PAVD shot_number as "integer64" to "character"
+### Converting PAVD shot_number as "integer64" to "character"
 level2BPAVDProfile_0808_cl$shot_number<-paste0(level2BPAVDProfile_0808_cl$shot_number)
 level2BPAVDProfile_1209_cl$shot_number<-paste0(level2BPAVDProfile_1209_cl$shot_number)
 
 
-# Converting PAI as data.table to SpatialPointsDataFrame
+### Converting PAI as data.table to SpatialPointsDataFrame
 level2BPAIProfile_spdf_0808_cl<-SpatialPointsDataFrame(cbind(level2BPAIProfile_0808_cl$lon_lowestmode,level2BPAIProfile_0808_cl$lat_lowestmode),
                                                data=level2BPAIProfile_0808_cl)
 level2BPAIProfile_spdf_1209_cl<-SpatialPointsDataFrame(cbind(level2BPAIProfile_1209_cl$lon_lowestmode,level2BPAIProfile_1209_cl$lat_lowestmode),
                                                  data=level2BPAIProfile_1209_cl)
 
 
-# Converting PAVD as data.table to SpatialPointsDataFrame
+### Converting PAVD as data.table to SpatialPointsDataFrame
 level2BPAVDProfile_spdf_0808_cl<-SpatialPointsDataFrame(cbind(level2BPAVDProfile_0808_cl$lon_lowestmode,level2BPAVDProfile_0808_cl$lat_lowestmode),
                                                 data=level2BPAVDProfile_0808_cl)
 level2BPAVDProfile_spdf_1209_cl<-SpatialPointsDataFrame(cbind(level2BPAVDProfile_1209_cl$lon_lowestmode,level2BPAVDProfile_1209_cl$lat_lowestmode),
                                                      data=level2BPAVDProfile_1209_cl)
 
 
-# Exporting PAI and PAVD Profiles as ESRI Shapefile
+### Exporting PAI and PAVD Profiles as ESRI Shapefile
 raster::shapefile(level2BPAIProfile_spdf_0808_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAI_0808_cl"))
 raster::shapefile(level2BPAIProfile_spdf_1209_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAI_1209_cl"))
 
@@ -287,13 +259,17 @@ raster::shapefile(level2BPAIProfile_spdf_1209_cl,paste0("D:/Mandl_L_PhD/NP_BGD/G
 raster::shapefile(level2BPAVDProfile_spdf_0808_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAVD_0808_cl"))
 raster::shapefile(level2BPAVDProfile_spdf_1209_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAVD_1209_cl"))
 
-#specify GEDI beam
+#-------------------------------------------------------------------------------
+# plot PAI and PAVD profiles
+#-------------------------------------------------------------------------------
+
+###specify GEDI beam
 beam="BEAM1011"
 
-# Plot Level2B PAI Profile
+### Plot Level2B PAI Profile
 gPAIprofile<-plotPAIProfile(level2BPAIProfile_0808, beam=beam, elev=TRUE)
 
-# Plot Level2B PAVD Profile
+### Plot Level2B PAVD Profile
 gPAVDprofile<-plotPAVDProfile(level2BPAVDProfile_0808, beam=beam, elev=TRUE)
 
 
@@ -301,39 +277,44 @@ gPAVDprofile<-plotPAVDProfile(level2BPAVDProfile_0808, beam=beam, elev=TRUE)
 # Compute descriptive statistics of GEDI Level2A and Level2B data
 #-------------------------------------------------------------------------------
 
-# Define your own function
+### Define your own function
 mySetOfMetrics = function(x)
 {
   metrics = list(
     min =min(x), # Min of x
     max = max(x), # Max of x
     mean = mean(x), # Mean of x
-    sd = sd(x)# Sd of x
+    sd = sd(x), # Sd of x
+    sum = sum(x) # sum of x
   )
   return(metrics)
 }
 
 
-# Computing the maximum of RH100 stratified by polygon
-rh100max_st_<-polyStatsLevel2AM(level2AM_1209,func=max(rh100), id="poly_id")
-head(rh100max_st)
+### compute PAI min, max, mean, sd, sum
 
-# Computing a serie statistics for GEDI metrics stratified by polygon
-rh100metrics_st<-polyStatsLevel2AM(level2AM_1209,func=mySetOfMetrics(rh100),
-                                   id="poly_id")
-head(rh100metrics_st)
+pai_stats_0808<-polyStatsLevel2BVPM(level2BVPM_0808_cl, func=mySetOfMetrics(pai), id="shot_number")
+pai_stats_1209<-polyStatsLevel2BVPM(level2BVPM_1209_cl, func=mySetOfMetrics(pai), id="shot_number")
 
-#-------------------------------------------------------------------------------
-# Computing the max/mean of the Total Plant Area Index
-#-------------------------------------------------------------------------------
-pai_max_0808<-polyStatsLevel2BVPM(level2BVPM_0808,func=max(pai), id=NULL)
+# compute FHD min, max, mean, sd, sum
+FHD_stats_0808<-polyStatsLevel2BVPM(level2BVPM_0808_cl, func=mySetOfMetrics(fhd_normal), id="shot_number")
+FHD_stats_1209<-polyStatsLevel2BVPM(level2BVPM_1209_cl, func=mySetOfMetrics(fhd_normal), id="shot_number")
+
+# compute clumping index min, max, mean, sd, sum
+clumping_stats_0808<-polyStatsLevel2BVPM(level2BVPM_0808_cl, func=mySetOfMetrics(), id="shot_number")
+clumping_stats_1209<-polyStatsLevel2BVPM(level2BVPM_1209_cl, func=mySetOfMetrics(fhd_normal), id="shot_number")
+
+
+### Computing the max/mean of the Total Plant Area Index
+
+pai_max_0808<-polyStatsLevel2BVPM(level2BVPM_0808_cl,func=max(pai), id=NULL)
 head(pai_max_0808)
 
-pai_max_1209<-polyStatsLevel2BVPM(level2BVPM_1209,func=max(pai), id=NULL)
+pai_max_1209<-polyStatsLevel2BVPM(level2BVPM_1209_cl,func=max(pai), id=NULL)
 head(pai_max_1209)
 
 
-# Computing the mean of Total Plant Area Index
+### Computing the mean of Total Plant Area Index
 
 pai_mean_0808<-polyStatsLevel2BVPM(level2BVPM_0808_cl,func=mean(pai), id=NULL)
 head(pai_mean_0808)
@@ -342,20 +323,60 @@ pai_mean_1209<-polyStatsLevel2BVPM(level2BVPM_1209_cl,func=mean(pai), id=NULL)
 head(pai_mean_1209)
 
 
-# Computing a serie of statistics of Canopy Cover stratified by polygon
-cover_metrics_st<-polyStatsLevel2BVPM(level2BVPM_clip_gb,func=mySetOfMetrics(cover),
+### remove nodata values
+pai_mean_0808 <- subset(pai_mean_0808, pai_mean_0808$height_bin0 != -9999)
+level2BPAVDProfile_1209_cl <- subset(level2BPAVDProfile_1209, level2BPAVDProfile_1209$height_bin0 != -9999)
+
+
+### Converting PAI shot_number as "integer64" to "character"
+level2BPAIProfile_0808_cl$shot_number<-paste0(level2BPAIProfile_0808_cl$shot_number)
+level2BPAIProfile_1209_cl$shot_number<-paste0(level2BPAIProfile_1209_cl$shot_number)
+
+
+### Converting PAVD shot_number as "integer64" to "character"
+level2BPAVDProfile_0808_cl$shot_number<-paste0(level2BPAVDProfile_0808_cl$shot_number)
+level2BPAVDProfile_1209_cl$shot_number<-paste0(level2BPAVDProfile_1209_cl$shot_number)
+
+
+### Converting PAI as data.table to SpatialPointsDataFrame
+level2BPAIProfile_spdf_0808_cl<-SpatialPointsDataFrame(cbind(level2BPAIProfile_0808_cl$lon_lowestmode,level2BPAIProfile_0808_cl$lat_lowestmode),
+                                                       data=level2BPAIProfile_0808_cl)
+level2BPAIProfile_spdf_1209_cl<-SpatialPointsDataFrame(cbind(level2BPAIProfile_1209_cl$lon_lowestmode,level2BPAIProfile_1209_cl$lat_lowestmode),
+                                                       data=level2BPAIProfile_1209_cl)
+
+
+### Converting PAVD as data.table to SpatialPointsDataFrame
+level2BPAVDProfile_spdf_0808_cl<-SpatialPointsDataFrame(cbind(level2BPAVDProfile_0808_cl$lon_lowestmode,level2BPAVDProfile_0808_cl$lat_lowestmode),
+                                                        data=level2BPAVDProfile_0808_cl)
+level2BPAVDProfile_spdf_1209_cl<-SpatialPointsDataFrame(cbind(level2BPAVDProfile_1209_cl$lon_lowestmode,level2BPAVDProfile_1209_cl$lat_lowestmode),
+                                                        data=level2BPAVDProfile_1209_cl)
+
+
+### Exporting PAI and PAVD Profiles as ESRI Shapefile
+raster::shapefile(level2BPAIProfile_spdf_0808_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAI_0808_cl"))
+raster::shapefile(level2BPAIProfile_spdf_1209_cl,paste0("D:/Mandl_L_PhD/NP_BGD/GEDI/_data/L2B/L2B_PAI_1209_cl"))
+
+
+
+#-------------------------------------------------------------------------------
+#start here for stratification by polygon (eg for specific altitudinal level)
+#-------------------------------------------------------------------------------
+
+### Computing a serie of statistics of Canopy Cover stratified by polygon
+cover_metrics_st<-polyStatsLevel2BVPM(level2BVPM_0808_cl,func=mySetOfMetrics(cover),
                                       id="poly_id")
 head(cover_metrics_st)
 
-#
-#Compute Grids with descriptive statistics of GEDI-derived Canopy Cover and Vertical Profile Metrics (Level2B)
-#
 
-# Computing a series of statistics of Total Plant Area Index
+### Compute Grids with descriptive statistics of GEDI-derived Canopy Cover and 
+### Vertical Profile Metrics (Level2B)
+
+
+### Computing a series of statistics of Total Plant Area Index
 pai_metrics_0808<-gridStatsLevel2BVPM(level2BVPM = level2BVPM_0808_cl, func=mySetOfMetrics(pai), res=0.005)
 pai_metrics_1209<-gridStatsLevel2BVPM(level2BVPM = level2BVPM_1209_cl, func=mySetOfMetrics(pai), res=0.005)
 
-# View maps
+### View maps
 
 pai_maps_0808<-levelplot(pai_metrics_0808,
                     layout=c(1, 4),
@@ -395,7 +416,7 @@ pai_maps_1209<-levelplot(pai_metrics_1209,
                          at=seq(0, 1.5, len=101),
                          names.attr=c("PAI min","PAI max","PAI mean", "PAI sd"))
 
-# Exporting maps 
+### Export maps 
 png("fig0808.png", width = 6, height = 8, units = 'in', res = 300)
 pai_maps_0808
 dev.off()
@@ -404,12 +425,13 @@ png("fig1209.png", width = 6, height = 8, units = 'in', res = 300)
 pai_maps_1209
 dev.off()
 
+
 #-------------------------------------------------------------------------------
-# compute heigth grids with descriptive statistics of GEDI-derived elevation
+# compute height grids with descriptive statistics of GEDI-derived elevation
 #-------------------------------------------------------------------------------
 
-# Computing a serie of statistics of GEDI RH100 metric
-rh100metrics<-gridStatsLevel2AM(level2AM = level2AM_0808_cl, func=mySetOfMetrics(rh100), res=0.005)
+### Computing a serie of statistics of GEDI RH100 metric
+rh100metrics<-gridStatsLevel2AM(level2AM = , func=mySetOfMetrics(rh100), res=0.005)
 
 
 rh100maps<-levelplot(rh100metrics,
@@ -431,12 +453,12 @@ rh100maps<-levelplot(rh100metrics,
                      at=seq(0, 18, len=101),
                      names.attr=c("rh100 min","rh100 max","rh100 mean", "rh100 sd"))
 
-# Exporting maps 
+### Exporting maps 
 png("RH_0808.png", width = 6, height = 8, units = 'in', res = 300)
 rh100maps
 dev.off()
 
-# Computing a serie of statistics of GEDI RH100 metric
+### Computing a serie of statistics of GEDI RH100 metric
 rh100metrics<-gridStatsLevel2AM(level2AM = level2AM_1209_cl, func=mySetOfMetrics(rh100), res=0.005)
 
 
@@ -459,13 +481,9 @@ rh100maps<-levelplot(rh100metrics,
                      at=seq(0, 18, len=101),
                      names.attr=c("rh100 min","rh100 max","rh100 mean", "rh100 sd"))
 
-# Exporting maps 
+### Exporting maps 
 png("RH_1209.png", width = 6, height = 8, units = 'in', res = 300)
 rh100maps
 dev.off()
 
-
-#-------------------------------------------------------------------------------
-# Compute grids with descriptive statistics
-#-------------------------------------------------------------------------------
 
