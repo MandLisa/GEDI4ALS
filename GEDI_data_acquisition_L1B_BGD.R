@@ -7,6 +7,7 @@
 #3 Download respective GEDI data
 #4 Subset GEDI granules
 #5 Visualise L1B geolocated pulses using Leaflet and plot pulse distribution
+#6 Export GEDI L1B waveform geolocations as ESRI shapefile
 
 #-------------------------------------------------------------------------------
 
@@ -171,36 +172,13 @@ gedilevel1b_subset_0808 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI
 
 gedilevel1b_subset_1209 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI_1B_subset_1209.h5"))
 
-gedilevel1b_subset_0710 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI_1B_subset_0710.h5"))
 
-gedilevel1b_subset_0910 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI_1B_subset_0910.h5"))
-
-gedilevel1b_subset_0111 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI_1B_subset_0111.h5"))
-
-gedilevel1b_subset_0311 <- readLevel1B(level1Bpath = file.path(outdir, "L1B/GEDI_1B_subset_0311.h5"))
-
-
-# read and get new subsetted h5 data files for all three datasets
-# attention: subset 5 and 8 have nonsense z values!
-
+# read and get new subsetted h5 data files for all two datasets
 level1bGeo_subset_0808 <- getLevel1BGeo(level1b = gedilevel1b_subset_0808, select=c("elevation_bin0"))
 head(level1bGeo_subset_0808)
 
 level1bGeo_subset_1209 <- getLevel1BGeo(level1b = gedilevel1b_subset_1209, select=c("elevation_bin0"))
 head(level1bGeo_subset_1209)
-
-level1bGeo_subset_0710 <- getLevel1BGeo(level1b = gedilevel1b_subset_0710, select=c("elevation_bin0"))
-head(level1bGeo_subset_0710)
-
-level1bGeo_subset_0910 <- getLevel1BGeo(level1b = gedilevel1b_subset_0910, select=c("elevation_bin0"))
-head(level1bGeo_subset_0910)
-
-level1bGeo_subset_0111 <- getLevel1BGeo(level1b = gedilevel1b_subset_0111, select=c("elevation_bin0"))
-head(level1bGeo_subset_0111)
-
-gedilevel1b_subset_0311 <- readLevel1B(level1Bpath = file.path(outdir, "GEDI_1B_subset_0311.h5"))
-level1bGeo_subset_0311 <- getLevel1BGeo(level1b = gedilevel1b_subset_0311, select=c("elevation_bin0"))
-head(level1bGeo_subset_0311)
 
 
 #-------------------------------------------------------------------------------
@@ -223,33 +201,12 @@ leaflet() %>%
                    radius = 1,
                    opacity = 1,
                    color = "orange")  %>%
-  addCircleMarkers(level1bGeo_subset_0710$longitude_bin0,
-                   level1bGeo_subset_0710$latitude_bin0,
-                   radius = 1,
-                   opacity = 1,
-                   color = "yellow")  %>%
-  addCircleMarkers(level1bGeo_subset_0910$longitude_bin0,
-                   level1bGeo_subset_0910$latitude_bin0,
-                   radius = 1,
-                   opacity = 1,
-                   color = "darkcyan")  %>%
-  addCircleMarkers(level1bGeo_subset_0111$longitude_bin0,
-                   level1bGeo_subset_0111$latitude_bin0,
-                   radius = 1,
-                   opacity = 1,
-                   color = "lightgreen")  %>%
-  addCircleMarkers(level1bGeo_subset_0311$longitude_bin0,
-                   level1bGeo_subset_0311$latitude_bin0,
-                   radius = 1,
-                   opacity = 1,
-                   color = "aquamarine")  %>%
   #addPolygons(data = NP,
              # color = "yellow") %>%
   addScaleBar(options = list(imperial = FALSE)) %>%
   addProviderTiles(providers$Esri.WorldImagery) %>%
-  addLegend(colors = c("red", "orange", "yellow", "darkcyan", "lightgreen", "aquamarine"), labels= c("Aug_8", "Sep_12", "Oct_7", "Oct_9", "Nov_1", "Nov_3"),title ="GEDI Level1B")
+  addLegend(colors = c("red", "orange"), labels= c("Aug_8", "Sep_12"),title ="GEDI Level1B")
  
-
 
 #-------------------------------------------------------------------------------
 # Prepare geolocation data for export as .shp
@@ -257,16 +214,7 @@ leaflet() %>%
 
 #Converting shot_number as "integer64" to "character"
 level1bGeo_subset_0808$shot_number<-paste0(level1bGeo_subset_0808$shot_number)
-
 level1bGeo_subset_1209$shot_number<-paste0(level1bGeo_subset_1209$shot_number)
-
-level1bGeo_subset_0710$shot_number<-paste0(level1bGeo_subset_0710$shot_number)
-
-level1bGeo_subset_0910$shot_number<-paste0(level1bGeo_subset_0910$shot_number)
-
-level1bGeo_subset_0111$shot_number<-paste0(level1bGeo_subset_0111$shot_number)
-
-level1bGeo_subset_0311$shot_number<-paste0(level1bGeo_subset_0311$shot_number)
 
 
 #-------------------------------------------------------------------------------
@@ -279,18 +227,6 @@ level1bGeo_subset_0808_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_0808
 level1bGeo_subset_1209_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_1209$longitude_bin0, level1bGeo_subset_1209$latitude_bin0),
                                                  data=level1bGeo_subset_1209)
 
-level1bGeo_subset_0710_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_0710$longitude_bin0, level1bGeo_subset_0710$latitude_bin0),
-                                                 data=level1bGeo_subset_0710)
-
-level1bGeo_subset_0910_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_0910$longitude_bin0, level1bGeo_subset_0910$latitude_bin0),
-                                                 data=level1bGeo_subset_0910)
-
-level1bGeo_subset_0111_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_0111$longitude_bin0, level1bGeo_subset_0111$latitude_bin0),
-                                                 data=level1bGeo_subset_0111)
-
-level1bGeo_subset_0311_spdf<-SpatialPointsDataFrame(cbind(level1bGeo_subset_0311$longitude_bin0, level1bGeo_subset_0311$latitude_bin0),
-                                                 data=level1bGeo_subset_0311)
-
 
 #-------------------------------------------------------------------------------
 # Exporting level1bGeo as ESRI Shapefile
@@ -299,31 +235,15 @@ raster::shapefile(level1bGeo_subset_0808_spdf,paste0(outdir,"\\GEDI01_B_0808_sub
 
 raster::shapefile(level1bGeo_subset_1209_spdf,paste0(outdir,"\\GEDI01_B_1209_sub"))
 
-raster::shapefile(level1bGeo_subset_0710_spdf,paste0(outdir,"\\GEDI01_B_0710_sub"))
-
-raster::shapefile(level1bGeo_subset_0910_spdf,paste0(outdir,"\\GEDI01_B_0910_sub"))
-
-raster::shapefile(level1bGeo_subset_0111_spdf,paste0(outdir,"\\GEDI01_B_0111_sub"))
-
-raster::shapefile(level1bGeo_subset_0311_spdf,paste0(outdir,"\\GEDI01_B_0311_sub"))
-
 
 #-------------------------------------------------------------------------------
 # Get GEDI Full-waveform (GEDI Level1B)
 #-------------------------------------------------------------------------------
 
-# Extracting GEDI full-waveform for a giving shotnumber
+# Extracting GEDI full-waveform for a given shotnumber
 wf_0808 <- getLevel1BWF(gedilevel1b_subset_0808, shot_number="37080000300139047")
 
-wf_1209 <- getLevel1BWF(gedilevel1b_1209, shot_number="42550000200197596")
-
-wf_0710 <- getLevel1BWF(gedilevel1b_0710, shot_number="54300000200197729")
-
-wf_0910 <- getLevel1BWF(gedilevel1b_0910, shot_number="22700000200196425")
-
-wf_0111 <- getLevel1BWF(gedilevel1b_0111, shot_number="32780000200198319")
-
-wf_0311 <- getLevel1BWF(gedilevel1b_0311, shot_number="37080000300139047")
+wf_1209 <- getLevel1BWF(gedilevel1b_subset_1209, shot_number="42550000200197596")
 
 
 # subset 1
@@ -344,46 +264,6 @@ plot(wf_1209, relative=FALSE, polygon=TRUE, type="l", lwd=2, col="forestgreen",
      xlab="Waveform Amplitude", ylab="Elevation (m)")
 grid()
 plot(wf_1209, relative=TRUE, polygon=FALSE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude (%)", ylab="Elevation (m)")
-grid()
-
-# subset 3
-par(mfrow = c(2,1), mar=c(4,4,1,1), cex.axis = 1.5)
-
-plot(wf_0710, relative=FALSE, polygon=TRUE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude", ylab="Elevation (m)")
-grid()
-plot(wf_0710, relative=TRUE, polygon=FALSE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude (%)", ylab="Elevation (m)")
-grid()
-
-# subset 4
-par(mfrow = c(2,1), mar=c(4,4,1,1), cex.axis = 1.5)
-
-plot(wf_0910, relative=FALSE, polygon=TRUE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude", ylab="Elevation (m)")
-grid()
-plot(wf_0910, relative=TRUE, polygon=FALSE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude (%)", ylab="Elevation (m)")
-grid()
-
-# subset 5
-par(mfrow = c(2,1), mar=c(4,4,1,1), cex.axis = 1.5)
-
-plot(wf_0111, relative=FALSE, polygon=TRUE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude", ylab="Elevation (m)")
-grid()
-plot(wf_0111, relative=TRUE, polygon=FALSE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude (%)", ylab="Elevation (m)")
-grid()
-
-# subset 6
-par(mfrow = c(2,1), mar=c(4,4,1,1), cex.axis = 1.5)
-
-plot(wf_0311, relative=FALSE, polygon=TRUE, type="l", lwd=2, col="forestgreen",
-     xlab="Waveform Amplitude", ylab="Elevation (m)")
-grid()
-plot(wf_0311, relative=TRUE, polygon=FALSE, type="l", lwd=2, col="forestgreen",
      xlab="Waveform Amplitude (%)", ylab="Elevation (m)")
 grid()
 
